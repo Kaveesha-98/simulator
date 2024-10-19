@@ -10,7 +10,7 @@
 #include <string>
 #include <stdint.h>
 
-#define STEP_TIMEOUT 1000
+#define STEP_TIMEOUT 100000
 
 using namespace std;
 
@@ -120,6 +120,19 @@ class simulator {
     default:
       return 0;
     }
+  }
+
+  __uint32_t waitForCore() {
+    if (!(tb -> waitingForCore_waiting)) {
+      printf("ERROR: Core should be waiting during the process of programming DRAM");
+      return 1;
+    }
+    for (;tb -> waitingForCore_waiting;tick_nodump(++tickcount, tb, tfp))
+      printf("Cycles remaining waiting: %016lx \r", tb -> waitingForCore_timeRemaining);
+
+    printf("\n");
+
+    return 0;
   }
 
   void init(
