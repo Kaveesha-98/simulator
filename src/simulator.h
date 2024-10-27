@@ -127,6 +127,17 @@ class simulator {
       printf("ERROR: Core should be waiting during the process of programming DRAM");
       return 1;
     }
+    __uint32_t remaining_cycles = tb -> waitingForCore_timeRemaining;
+
+    for (__uint32_t remaining_cycles = tb -> waitingForCore_timeRemaining; remaining_cycles > 2048; ) {
+      for (__uint16_t i = 0; i < 1024; i++) {
+        tick_nodump(++tickcount, tb, tfp);
+        remaining_cycles=remaining_cycles-1;
+      }
+      printf("Cycles remaining waiting: %016lx \r", remaining_cycles);
+    }
+
+
     for (;tb -> waitingForCore_waiting;tick_nodump(++tickcount, tb, tfp))
       printf("Cycles remaining waiting: %016lx \r", tb -> waitingForCore_timeRemaining);
 
