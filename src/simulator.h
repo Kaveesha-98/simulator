@@ -13,6 +13,9 @@
 
 #define STEP_TIMEOUT 100000
 
+#define TICK_AND_NO_DUMP tick_nodump(++tickcount, tb, tfp)
+#define TICK_AND_DUMP tick(++dump_tick, tb, tfp)
+
 using namespace std;
 
 class simulator {
@@ -130,7 +133,7 @@ class simulator {
       printf("ERROR: Core should be waiting during the process of programming DRAM");
       return 1;
     }
-    for (;tb -> waitingForCore_waiting;tick_nodump(++tickcount, tb, tfp))
+    for (;tb -> waitingForCore_waiting;TICK_AND_NO_DUMP)
       printf("Cycles remaining waiting: %016lx \r", tb -> waitingForCore_timeRemaining);
 
     printf("\n");
@@ -156,11 +159,11 @@ class simulator {
 
     tb -> reset = 1;
     for(int i = 0; i < 20; i++){
-      tick_nodump(++tickcount, tb, tfp);
+      TICK_AND_NO_DUMP;
     }
     tb -> reset = 0;
     for(int i = 0; i < 20; i++){
-      tick_nodump(++tickcount, tb, tfp);
+      TICK_AND_NO_DUMP;
     }
 
     printf("*********************************Loading kernel image*********************************\n");
@@ -178,7 +181,7 @@ class simulator {
 			tb -> programmer_byte = *reinterpret_cast<unsigned long*>(&buffer.at(i));
       tb -> programmer_offset = i;
 			//cout << buffer.at(i)&255 << endl;
-			tick_nodump(++tickcount, tb, tfp);	
+			TICK_AND_NO_DUMP;	
       // if (progress != (i*100)/buffer.size()) 
       printf("Kernel Loaded: %ld \%\r", (i*100)/buffer.size());		
 		}
@@ -194,7 +197,7 @@ class simulator {
 			tb -> programmer_byte = *reinterpret_cast<unsigned long*>(&dtb_buffer.at(i));
       tb -> programmer_offset = (i+0x07e00000UL);
 			//cout << buffer.at(i)&255 << endl;
-			tick_nodump(++tickcount, tb, tfp);	
+			TICK_AND_NO_DUMP;	
       // if (progress != (i*100)/buffer.size()) 
       printf("Kernel Loaded: %ld \%\r", (i*100)/buffer.size());		
 		}
@@ -210,17 +213,17 @@ class simulator {
 			tb -> programmer_byte = *reinterpret_cast<unsigned long*>(&boot_buffer.at(i));
       tb -> programmer_offset = (i+0x07ffff00UL);
 			//cout << buffer.at(i)&255 << endl;
-			tick_nodump(++tickcount, tb, tfp);	
+			TICK_AND_NO_DUMP;	
       // if (progress != (i*100)/buffer.size()) 
       printf("Kernel Loaded: %ld \%\r", (i*100)/buffer.size());		
 		}
     printf("done\n");
 		tb ->finishedProgramming = 1;
     tb ->programmer_valid = 0;
-    tick_nodump(++tickcount, tb, tfp);
+    TICK_AND_NO_DUMP;
 		tb ->finishedProgramming = 0;
     tb ->programmer_valid = 0;
-    tick_nodump(++tickcount, tb, tfp);
+    TICK_AND_NO_DUMP;
     prev_pc = 0x80000000UL;
   }
 
@@ -228,16 +231,16 @@ class simulator {
     /* while (1) { // runs until a instruction is completed
       if (tb -> robOut_commitFired){
         prev_pc = tb -> robOut_pc;
-        tick_nodump(++tickcount, tb, tfp);
+        TICK_AND_NO_DUMP;
         if (tb ->putChar_valid) { cout << (char)(tb -> putChar_byte) << flush; }
         break;
       }
       
-      tick_nodump(++tickcount, tb, tfp);
+      TICK_AND_NO_DUMP;
 
       if (tb ->putChar_valid) { cout << (char)(tb -> putChar_byte) << flush; }
     } */
-    tick(++dump_tick, tb, tfp);
+    TICK_AND_DUMP;
     #ifndef STEP_TIMEOUT
     while (!(tb -> robOut_commitFired)) {
     #else
@@ -246,7 +249,7 @@ class simulator {
     #ifdef SHOW_TERMINAL
       if (tb ->putChar_valid) { cout << tb -> putChar_byte << flush; }
     #endif
-      tick(++dump_tick, tb, tfp);
+      TICK_AND_DUMP;
           }
     
     #ifdef SHOW_TERMINAL
@@ -262,16 +265,16 @@ class simulator {
     /* while (1) { // runs until a instruction is completed
       if (tb -> robOut_commitFired){
         prev_pc = tb -> robOut_pc;
-        tick_nodump(++tickcount, tb, tfp);
+        TICK_AND_NO_DUMP;
         if (tb ->putChar_valid) { cout << (char)(tb -> putChar_byte) << flush; }
         break;
       }
       
-      tick_nodump(++tickcount, tb, tfp);
+      TICK_AND_NO_DUMP;
 
       if (tb ->putChar_valid) { cout << (char)(tb -> putChar_byte) << flush; }
     } */
-    tick_nodump(++tickcount, tb, tfp);
+    TICK_AND_NO_DUMP;
     #ifndef STEP_TIMEOUT
     while (!(tb -> robOut_commitFired)) {
     #else
@@ -280,7 +283,7 @@ class simulator {
     #ifdef SHOW_TERMINAL
       //if (tb ->putChar_valid) { cout << tb -> putChar_byte << flush; }
     #endif
-      tick_nodump(++tickcount, tb, tfp);
+      TICK_AND_NO_DUMP;
           }
     
     #ifdef SHOW_TERMINAL
